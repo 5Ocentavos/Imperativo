@@ -1,0 +1,148 @@
+{2. Un cine posee la lista de películas que proyectará durante el mes de octubre. De cada
+película se conoce: código de película, código de género (1: acción, 2: aventura, 3: drama,
+4: suspenso, 5: comedia, 6: bélica, 7: documental y 8: terror) y puntaje promedio otorgado
+por las críticas.
+Implementar un programa modularizado que:
+a. Lea los datos de películas y los almacene por orden de llegada y agrupados por
+código de género, en una estructura de datos adecuada. La lectura finaliza cuando se lee
+el código de película -1.
+b. Una vez almacenada la información, genere un vector que guarde, para cada
+género, el código de película con mayor puntaje obtenido entre todas las críticas.
+c. Ordene los elementos del vector generado en b) por puntaje.
+d. Luego de ordenar el vector, muestre el código de película con mayor puntaje y el
+código de película con menor puntaje.
+}
+
+
+program p1e2;
+type
+  cantGen= 1..8;
+  pelicula = record 
+    codPel: integer;
+    codGen: integer;
+    puntaje: real;
+  end;
+  
+  lista = ^nodo;
+  nodo = record
+    dato: pelicula;
+    sig: lista;
+  end;
+  
+  vGeneros = array [cantGen] of lista;
+  vGenerosUlt = array [cantGen] of lista; // en este vector llevo la direccion del ultimo nodo que agregue a la lista x del vector de generos
+  
+  //b)enere un vector que guarde, para cada género, el código de película con mayor puntaje obtenido entre todas las críticas.
+  vGenMaxPuntajes = array [cantGen] of pelicula;
+  
+procedure ordenarVecPuntaje (var vP: vGenMaxPuntajes);
+var
+  i: cantGen;
+  j : 0..8;
+  act: pelicula;
+begin
+  for i:= 2 to 8 do
+    begin
+      act := vP[i];
+      j := i-1;
+      while (j>0) and (vP[j].puntaje > act.puntaje) do
+        begin
+          vP[j+1]:= vP[j];
+          j := j-1;
+        end;
+      vP [j+1] := act;
+    end;
+end;
+  
+procedure maximoLista (l: lista; var max: pelicula);
+begin
+  while (l <> nil) do
+    begin
+      if (l^.dato.puntaje > max.puntaje) then
+        max := l^.dato;
+      l := l^.sig;
+    end;
+end;
+  
+procedure codMaxPuntaje (vG: vGeneros; var vP: vGenMaxPuntajes);
+var 
+  pelMax : pelicula;
+  i: cantGen;
+begin
+  for i:= 1 to 8 do
+    begin
+      pelMax.codPel := -1; //para que no quede guardado con un codigo viejo
+      pelMax.puntaje := -1;
+      maximoLista (vG[i], pelMax);
+      vP[i]:= pelMax;
+    end;
+end;
+  
+procedure agregarAtras (var l: lista; var ult: lista; pel: pelicula);
+var
+  aux: lista;
+begin
+  new (aux);
+  aux^.dato := pel;
+  if (l = nil) then
+    begin
+      aux^.sig := l;
+      l := aux;
+   end
+  else
+    ult^.sig := aux;
+  ult := aux;
+end;
+  
+procedure leerPelicula (var p: pelicula);
+begin
+  with (p) do
+    begin
+      writeln ('Ingrese el codigo de la pelicula: ');
+      readln (codPel);
+      if ( codPel <> -1) then
+        begin
+          writeln ('Ingrese el codigo de genero 1: accion, 2: aventura, 3: drama,  4: suspenso, 5: comedia, 6: belica, 7: documental y 8: terror');
+          readln (codGen);
+          writeln ('Ingrese el puntaje promedio: ');
+          readln (puntaje);
+        end;
+    end;
+end;
+
+procedure inicializarVectorLista ( var vG : vGeneros);
+var
+  i: cantGen;
+begin
+  for i:= 1 to 8 do
+    vG[i] := nil;
+end;
+
+procedure cargarVectorGeneros (var vG: vGeneros);
+var
+  pel: pelicula;
+  vUlt: vGenerosUlt; // va a llevar el ultimo de cada lista
+begin
+  writeln ('---COMIENZA LA LECTURA DE PELICULAS---');
+  inicializarVectorLista (vG); //inicializo cada posicion de mi vector de lista de peliculas en nill
+  leerPelicula (pel);
+  while (pel.codPel <> -1) do
+    begin
+      agregarAtras (vG[pel.codGen], vUlt[pel.codGen], pel);
+      writeln ('');
+      leerPelicula (pel);
+    end;
+end;
+
+
+var
+  vG: vGeneros;
+  vP: vGenMaxPuntajes;
+BEGIN
+  cargarVectorGeneros (vG); //a) Lea los datos de películas y los almacene por orden de llegada y agrupados por código de género
+  codMaxPuntaje (vG, vP); //b) genere un vector que guarde, para cada género, el código de película con mayor puntaje obtenido entre todas las críticas.
+  ordenarVecPuntaje (vP); //c. Ordene los elementos del vector generado en b)
+  writeln ('La pelicula de codigo ', vP[1].codPel, ' obtuvo el menor puntaje ', vP[1].puntaje:2:2); //d) muestre el código de película con mayor puntaje 
+  writeln ('La pelicula de codigo ', vP[8].codPel, ' obtuvo el mayor puntaje ', vP[8].puntaje:2:2); // y el código de película con menor puntaje.	
+END.
+
